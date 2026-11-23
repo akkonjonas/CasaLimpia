@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2f55e0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Casa">
+<title>Casa en Orden</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: amable y práctica, como un compañero que te dice "hacé solo esto hoy".
+   IDEA: la planilla de tareas pegada en la heladera, cruzada con el plano de la casa.
+   PICTURE: corte de la casa (dos pisos, garage, lavadero, patio y pileta) donde cada ambiente se tiñe según cuánto hace que no se limpia.
+   COLOUR and TYPE: azul cobalto dominante, agua de pileta como apoyo, coral para lo atrasado. Fredoka + Nunito Sans.
+   LAYOUT: banda azul con el progreso del día, casa, lista de mini tareas; barra inferior fija estilo app. */
+:root{color-scheme:light dark;--bg:light-dark(#f6f7fb,#0e1326);--card:light-dark(#fff,#182042);--ink:light-dark(#14183a,#eef0ff);--mut:light-dark(#5b6283,#a6acd0);--line:light-dark(#e3e6f2,#2a3360);--pri:light-dark(#2f55e0,#6d8bff);--band:light-dark(#2f55e0,#1b2b80);--aqua:#3fcfc8;--ok:light-dark(#1f9f88,#3fd1b5);--due:light-dark(#d99500,#f5c045);--late:light-dark(#e8432b,#ff7a63);--soft:light-dark(#eef1ff,#212b5a)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Nunito Sans",system-ui,sans-serif;overflow-x:clip;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+h1,h2,h3{font-family:Fredoka,system-ui,sans-serif;font-weight:600;line-height:1.1;margin:0;text-wrap:balance}
+h1{font-size:clamp(28px,7vw,40px)}h2{font-size:22px}h3{font-size:17px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;min-height:44px;border-radius:12px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--aqua);outline-offset:2px}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px}
+.band{background:var(--band);color:#fff;padding:calc(18px + env(safe-area-inset-top)) 0 22px}
+.top{display:flex;align-items:center;gap:16px}
+.top .txt{flex:1}.top p{margin:4px 0 0;opacity:.85}
+.ring{flex:none;width:84px;height:84px}
+.go{margin-top:16px;width:100%;background:#fff;color:#1c2f8f;font-weight:700;font-size:17px;padding:12px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 0 rgba(0,0,0,.18)}
+.go:active{transform:translateY(3px);box-shadow:0 3px 0 rgba(0,0,0,.18)}
+section{margin:22px 0}
+.sh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}.sh small{color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px}
+.task{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;margin-bottom:8px}
+.task .b{flex:1}.task .n{font-weight:700}.task .m{font-size:13px;color:var(--mut)}
+.task.done .n{text-decoration:line-through;opacity:.55}
+.chk{flex:none;width:44px;height:44px;border-radius:50%;border:2.5px solid var(--line);display:grid;place-items:center}
+.done .chk{background:var(--ok);border-color:var(--ok);color:#fff}
+.chk svg{width:22px;height:22px}
+.zc{display:inline-block;font-size:13px;font-weight:700;padding:1px 8px;border-radius:99px;background:var(--soft);color:var(--pri);margin-right:6px;white-space:nowrap}
+.later{color:var(--mut);font-size:13px;padding:0 8px}
+.habits{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(150px,100%),1fr));gap:8px}
+.hb{display:flex;align-items:center;gap:10px;padding:10px 12px;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:14px;font-weight:600}
+.hb i{flex:none;width:26px;height:26px;border-radius:8px;border:2.5px solid var(--line);display:grid;place-items:center;font-style:normal;color:#fff}
+.hb.on i{background:var(--ok);border-color:var(--ok)}.hb.on{color:var(--mut)}
+.streak{font-family:Fredoka;font-size:15px;color:var(--pri)}
+.ghost{border:1.5px dashed var(--line);width:100%;color:var(--mut);font-weight:700}
+.empty{padding:22px;text-align:center;color:var(--mut)}
+.house{padding:8px}.house svg{display:block;width:100%;height:auto}
+.house text{font:600 12px "Nunito Sans",sans-serif;fill:var(--ink);pointer-events:none}
+.room{cursor:pointer;transition:opacity .2s}.room:hover{opacity:.8}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mut);padding:4px 8px 8px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;background:var(--c)}
+.zrow{display:flex;align-items:center;gap:12px;padding:12px 14px;width:100%;text-align:left;border-bottom:1px solid var(--line);border-radius:0}
+.zrow:last-child{border:0}.zrow .b{flex:1}
+.bar{height:8px;border-radius:9px;background:var(--soft);overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;border-radius:9px}
+.pct{font-family:Fredoka;font-size:18px;white-space:nowrap}
+.st-ok{--c:var(--ok)}.st-due{--c:var(--due)}.st-late{--c:var(--late)}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--c);flex:none}
+.btn{background:var(--pri);color:#fff;font-weight:700;padding:10px 18px}
+.btn2{background:var(--soft);color:var(--pri);font-weight:700;padding:10px 16px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+label{display:block;font-weight:700;font-size:14px;margin:12px 0 4px}
+input,select,textarea{width:100%;font-size:16px;padding:11px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg)}
+textarea{min-height:110px;font-size:13px}
+.set{padding:4px 16px 16px;margin-bottom:12px}
+.sw{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.sw:last-child{border:0}.sw small{display:block;color:var(--mut);font-weight:400}
+.tog{width:52px;height:30px;min-height:30px;border-radius:99px;background:var(--line);position:relative;flex:none}
+.tog::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s}
+.tog[aria-pressed=true]{background:var(--ok)}.tog[aria-pressed=true]::after{left:25px}
+nav{position:fixed;inset:auto 0 0 0;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:6px 6px calc(6px + env(safe-area-inset-bottom));z-index:5}
+nav a{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;font-weight:700;color:var(--mut);text-decoration:none;padding:6px;border-radius:12px}
+nav a svg{width:24px;height:24px}nav a.on{color:var(--pri);background:var(--soft)}
+.ov{position:fixed;inset:0;background:rgba(10,14,40,.55);display:none;align-items:flex-end;justify-content:center;z-index:9}
+.ov.show{display:flex}
+.sheet{background:var(--card);width:100%;max-width:640px;max-height:88vh;overflow:auto;border-radius:22px 22px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom))}
+.sheet .x{float:right;width:44px;font-size:24px;color:var(--mut)}
+.focus{text-align:center;padding:10px 0}
+.focus .clock{font-family:Fredoka;font-size:64px;color:var(--pri);margin:14px 0;font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);opacity:0;background:var(--ink);color:var(--bg);padding:8px 8px 8px 16px;border-radius:14px;display:flex;align-items:center;gap:10px;transition:.25s;z-index:10;width:max-content;max-width:92vw;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%);pointer-events:auto}.toast button{color:var(--aqua);font-weight:700;padding:0 10px}
+.tip{padding:12px 14px;background:var(--soft);border-radius:14px;font-size:15px}
+footer{text-align:center;color:var(--mut);font-size:14px;padding:26px 0 10px}
+footer b{font-family:Fredoka;font-weight:500;color:var(--ink)}
+.zone-tasks .task{border:1px solid var(--line);border-radius:14px}
+.edit{color:var(--mut);font-size:13px;padding:0 10px;font-weight:700}
+a.edit{display:inline-grid;place-items:center;min-height:44px;color:var(--pri);text-decoration:none}
+.st-new{--c:var(--pri)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--soft);padding:4px;border-radius:14px}
+.seg button{font-weight:700;color:var(--mut)}.seg button[aria-pressed=true]{background:var(--card);color:var(--pri);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.rrow{display:flex;align-items:center;gap:8px;margin-bottom:8px}.rrow input{flex:1;padding:9px 12px}
+.rt{flex:none;width:76px;font-size:13px;font-weight:700;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rx{flex:none;width:44px;font-size:22px;color:var(--late)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.chip{min-height:40px;padding:0 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--bg);font-weight:700;font-size:14px;color:var(--pri)}
+.chip:active{background:var(--soft)}
+.savebar{position:sticky;bottom:calc(72px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 8px 8px 14px;margin-top:14px;box-shadow:0 8px 24px rgba(10,14,40,.15);z-index:3}
+.savebar span{flex:1;font-size:14px;color:var(--mut);font-weight:600}
+button[disabled]{opacity:.45;cursor:default}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="band"><div class="wrap">
+  <div class="top">
+    <div class="txt"><h1 id="hello">Hoy en casa</h1><p id="sub">Cargando…</p></div>
+    <svg class="ring" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="34" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="10"/><circle id="ringv" cx="42" cy="42" r="34" fill="none" stroke="#3fcfc8" stroke-width="10" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="213.6" transform="rotate(-90 42 42)" style="transition:stroke-dashoffset .6s"/><text id="ringt" x="42" y="49" text-anchor="middle" fill="#fff" font-family="Fredoka" font-size="20">0/0</text></svg>
+  </div>
+  <button class="go" id="goBtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>¿Por dónde empiezo?</button>
+</div></header>
+
+<main class="wrap" id="view"></main>
+
+<footer class="wrap">Desarrollado por <b>Jonás Silva</b></footer>
+
+<nav id="nav">
+  <a href="#hoy" data-v="hoy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>Hoy</a>
+  <a href="#casa" data-v="casa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Casa</a>
+  <a href="#tareas" data-v="tareas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Tareas</a>
+  <a href="#ajustes" data-v="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Ajustes</a>
+</nav>
+
+<div class="ov" id="ov"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast"><span id="toastT"></span><button id="toastU">Deshacer</button></div>
+
+<script>
+{
+// Catálogo de ambientes: nombre, abreviatura, ancho relativo en el dibujo, dónde puede ir y sus tareas [tarea, cada cuántos días, minutos]
+const TPL={
+ cocina:{n:'Cocina',s:'Cocina',w:1.2,at:'in',t:[['Limpiar mesada y anafe',1,5],['Barrer y trapear el piso',3,10],['Limpiar el microondas',7,5],['Limpiar la heladera por dentro',30,20],['Desengrasar azulejos y campana',30,20]]},
+ comedor:{n:'Comedor',s:'Comedor',w:1.1,at:'in',t:[['Limpiar mesa y sillas',3,5],['Barrer o aspirar',4,10]]},
+ living:{n:'Living',s:'Living',w:1.4,at:'in',t:[['Despejar superficies y acomodar almohadones',2,5],['Aspirar o barrer',4,10],['Sacudir polvo de muebles y TV',7,10],['Limpiar vidrios y ventanas',30,20]]},
+ dormitorio:{n:'Dormitorio',s:'Dorm.',w:1.2,at:'in',t:[['Ordenar ropa y mesa de luz',3,10],['Aspirar o barrer',7,10],['Cambiar sábanas',7,10],['Ordenar un estante del placard',30,15]]},
+ bano:{n:'Baño',s:'Baño',w:.75,at:'in',t:[['Repaso rápido: lavatorio e inodoro',2,5],['Limpieza a fondo (ducha, piso, espejo)',7,20],['Cambiar toallas',5,3]]},
+ oficina:{n:'Escritorio',s:'Escrit.',w:1,at:'in',t:[['Ordenar el escritorio',3,5],['Sacudir polvo y limpiar pantalla',7,10],['Aspirar o barrer',7,10],['Archivar o tirar papeles',30,15]]},
+ pasillo:{n:'Entrada',s:'Entrada',w:.7,at:'in',t:[['Barrer la entrada',3,5],['Ordenar calzado y abrigos',3,5],['Limpiar puerta y picaporte',30,10]]},
+ escalera:{n:'Escalera',s:'Esc.',w:.55,at:'in',t:[['Barrer o aspirar la escalera',7,5],['Limpiar la baranda',30,5]]},
+ balcon:{n:'Balcón',s:'Balcón',w:.9,at:'in',t:[['Barrer el balcón',7,10],['Regar las plantas',3,5],['Limpiar baranda y vidrios',30,15]]},
+ lavadero:{n:'Lavadero',s:'Lavad.',w:.85,at:'both',t:[['Poner a lavar una carga',2,5],['Doblar y guardar la ropa',2,10],['Limpiar filtro del lavarropas',30,10],['Ordenar productos de limpieza',30,10]]},
+ deposito:{n:'Depósito',s:'Dep.',w:.8,at:'both',t:[['Ordenar un estante',30,20],['Separar cosas para tirar o donar',60,20]]},
+ garage:{n:'Garage',s:'Garage',w:1,at:'out',t:[['Barrer el garage',14,15],['Ordenar un rincón o estantería',14,15],['Separar cosas para tirar o donar',30,20]]},
+ patio:{n:'Patio',s:'Patio',w:1,at:'out',t:[['Juntar hojas y barrer',4,15],['Regar las plantas',2,10],['Acomodar muebles de patio',14,10],['Cortar el pasto',14,45]]},
+ jardin:{n:'Jardín',s:'Jardín',w:1,at:'out',t:[['Regar el jardín',2,10],['Cortar el pasto',14,45],['Sacar yuyos',14,20],['Podar y juntar ramas',30,30]]},
+ quincho:{n:'Quincho',s:'Quincho',w:1,at:'out',t:[['Limpiar la parrilla',7,15],['Barrer el quincho',7,10],['Limpiar mesa y sillas',14,10]]},
+ pileta:{n:'Pileta',s:'Pileta',w:1,at:'out',t:[['Pasar el sacahojas',2,10],['Medir pH y cloro',3,5],['Vaciar canasto del skimmer',7,5],['Pasar el barrefondo',7,30],['Retrolavado del filtro',14,15]]}};
+const YARD=new Set(['patio','jardin','pileta','quincho']);
+const FLN=f=>f<0?'Afuera':['Planta baja','Primer piso','Segundo piso'][f];
+// Datos de la versión anterior (casa fija) → se convierten en ambientes sin perder nada
+const OLD={cocina:['cocina','Cocina',0],comedor:['comedor','Comedor',0],sala:['living','Sala',0],banopb:['bano','Baño de abajo',0],escalera:['escalera','Escalera',0],pieza1:['dormitorio','Pieza 1',1],pieza2:['dormitorio','Pieza 2',1],banopa:['bano','Baño de arriba',1],lavadero:['lavadero','Lavadero',-1],garage:['garage','Garage',-1],patio:['patio','Patio',-1],pileta:['pileta','Pileta',-1]};
+const PRESET={floors:1,rooms:[['cocina',0],['living',0],['dormitorio',0,'Dormitorio 1'],['dormitorio',0,'Dormitorio 2'],['bano',0],['patio',-1]]};
+const HAB=['Tender la cama','Platos lavados antes de dormir','Ropa sucia al canasto','Reset de 10 min: todo a su lugar','Sacar la basura'];
+const FREQ=[[1,'Todos los días'],[2,'Cada 2 días'],[3,'Cada 3 días'],[4,'Cada 4 días'],[5,'Cada 5 días'],[7,'Semanal'],[14,'Cada 2 semanas'],[30,'Mensual'],[60,'Cada 2 meses'],[90,'Cada 3 meses']];
+const KEY='casa-en-orden-v1';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ds=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const pd=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c,12)};
+const add=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return ds(d)};
+const diff=(a,b)=>Math.round((pd(b)-pd(a))/864e5);
+let T=ds(new Date());
+const uid=()=>Math.random().toString(36).slice(2,9);
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+function fresh(){return {floors:1,rooms:[],tasks:[],habits:HAB.map(n=>({id:uid(),name:n})),hdone:{},streak:{count:0,last:''},plan:{date:'',ids:[]},cfg:{budget:25,hour:19,pool:true,notif:false},notified:''}}
+function migrate(o){if(!o||!o.tasks)return null;if(!o.rooms){o.floors=2;o.rooms=Object.entries(OLD).map(([id,[type,name,floor]])=>({id,type,name,floor}))}o.floors=o.floors||1;return o}
+// Tareas de un ambiente nuevo, escalonadas para que no venzan todas el mismo día
+function tasksFor(r,seed){return (TPL[r.type]?.t||[]).map((d,i)=>({id:uid(),zone:r.id,name:d[0],freq:d[1],min:d[2],last:add(T,-1-Math.floor((d[1]-1)*0.85*(((seed+i)*0.618)%1))),snooze:null}))}
+let S;try{S=migrate(JSON.parse(localStorage.getItem(KEY)))}catch(e){}
+if(!S)S=fresh();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}syncCfg()}
+const room=id=>S.rooms.find(r=>r.id===id);
+const zn=id=>room(id)?.name||'Sin ambiente';
+const ordered=()=>[...S.rooms].sort((a,b)=>(a.floor<0?99:a.floor)-(b.floor<0?99:b.floor));
+const hasPool=()=>S.rooms.some(r=>r.type==='pileta');
+
+const active=t=>!(room(t.zone)?.type==='pileta'&&!S.cfg.pool&&t.freq<14);
+const ratio=t=>active(t)?diff(t.last,T)/t.freq:0;
+const snoozed=t=>t.snooze&&t.snooze>T;
+const isDue=t=>active(t)&&!snoozed(t)&&ratio(t)>=1&&t.last!==T;
+const stOf=r=>r>=1.5?'late':r>=1?'due':'ok';
+function zoneInfo(z){const ts=S.tasks.filter(t=>t.zone===z&&active(t));if(!ts.length)return{h:100,st:'ok',due:0,paused:S.tasks.some(t=>t.zone===z)};
+  const rs=ts.map(t=>Math.min(ratio(t),2));const avg=rs.reduce((a,b)=>a+b,0)/rs.length;
+  return{h:Math.round(100*Math.max(0,Math.min(1,1.25-avg*.6))),st:stOf(Math.max(...rs)),due:ts.filter(isDue).length}}
+
+function buildPlan(){
+  if(S.plan.date===T)return;
+  const c=S.tasks.filter(isDue).sort((a,b)=>ratio(b)-ratio(a));let m=0;const ids=[];const zs={};
+  for(const t of c){if(m+t.min>S.cfg.budget&&ids.length)continue;if((zs[t.zone]||0)>=2)continue;ids.push(t.id);m+=t.min;zs[t.zone]=(zs[t.zone]||0)+1;if(m>=S.cfg.budget)break}
+  if(!ids.length)S.tasks.filter(t=>active(t)&&!snoozed(t)&&ratio(t)>=.6).sort((a,b)=>ratio(b)-ratio(a)).slice(0,2).forEach(t=>ids.push(t.id));
+  S.plan={date:T,ids};save();
+}
+const plan=()=>S.plan.ids.map(id=>S.tasks.find(t=>t.id===id)).filter(Boolean);
+const pending=()=>plan().filter(t=>t.last!==T).length;
+function addOne(){const t=S.tasks.filter(t=>!S.plan.ids.includes(t.id)&&active(t)&&!snoozed(t)&&t.last!==T).sort((a,b)=>ratio(b)-ratio(a))[0];
+  if(t){S.plan.ids.push(t.id);save();render();toast('Sumaste: '+t.name)}}
+
+let undoFn=null,toastTm;
+function toast(msg,undo){$('#toastT').textContent=msg;undoFn=undo||null;$('#toastU').style.display=undo?'':'none';$('#toast').classList.add('show');clearTimeout(toastTm);toastTm=setTimeout(()=>$('#toast').classList.remove('show'),4000)}
+$('#toastU').onclick=()=>{if(undoFn){undoFn();undoFn=null;save();render()}$('#toast').classList.remove('show')};
+
+function complete(id){const t=S.tasks.find(x=>x.id===id);if(!t)return;
+  if(t.last===T&&t._prev){const p=t._prev;t.last=p;delete t._prev;save();render();return}
+  const prev=t.last,ps=t.snooze;t._prev=prev;t.last=T;t.snooze=null;save();render();
+  const left=pending();toast(left?`¡Bien! Quedan ${left}.`:'¡Listo por hoy!',()=>{t.last=prev;t.snooze=ps;delete t._prev});}
+function postpone(id){const t=S.tasks.find(x=>x.id===id);const ps=t.snooze;t.snooze=add(T,1);const i=S.plan.ids.indexOf(id);if(i>-1)S.plan.ids.splice(i,1);save();render();
+  toast('Pasada a mañana',()=>{t.snooze=ps;if(i>-1)S.plan.ids.splice(i,0,id)})}
+
+function toggleHabit(id){const d=S.hdone[T]||(S.hdone[T]=[]);const i=d.indexOf(id);i>-1?d.splice(i,1):d.push(id);
+  const all=S.habits.every(h=>d.includes(h.id)),st=S.streak;
+  if(all&&st.last!==T){st.count=st.last===add(T,-1)?st.count+1:1;st.last=T}
+  else if(!all&&st.last===T){st.count=Math.max(0,st.count-1);st.last=st.count?add(T,-1):''}
+  for(const k in S.hdone)if(diff(k,T)>14)delete S.hdone[k];save();render()}
+const streak=()=>S.streak.last===T||S.streak.last===add(T,-1)?S.streak.count:0;
+
+const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
+function when(t){const d=diff(t.last,T);const s=d===0?'hoy':d===1?'ayer':`hace ${d} días`;const n=t.freq-d;
+  return `Última vez ${s} · ${n>0?`toca en ${n} día${n>1?'s':''}`:n===0?'toca hoy':`atrasada ${-n} día${n<-1?'s':''}`}`}
+function taskRow(t,opts={}){const done=t.last===T;
+  return `<div class="task card ${done?'done':''}"><button class="chk" data-done="${t.id}" aria-label="${done?'Desmarcar':'Marcar hecha'}: ${esc(t.name)}">${done?CHK:''}</button>
+  <div class="b"><div class="n">${esc(t.name)}</div><div class="m">${opts.zone!==false?`<span class="zc">${esc(zn(t.zone))}</span>`:''}${t.min} min${opts.when?' · '+when(t):''}</div></div>
+  ${opts.later&&!done?`<button class="later" data-later="${t.id}">Mañana</button>`:''}${opts.edit?`<button class="edit" data-edit="${t.id}">Editar</button>`:''}</div>`}
+
+function vHoy(){const p=plan(),hd=S.hdone[T]||[],mins=p.filter(t=>t.last!==T).reduce((a,t)=>a+t.min,0);
+  const late=S.tasks.filter(t=>isDue(t)&&!S.plan.ids.includes(t.id)).length;
+  return `<section><div class="sh"><h2>Rutina de todos los días</h2><span class="streak">${streak()} día${streak()===1?'':'s'} de racha</span></div>
+  <div class="habits">${S.habits.map(h=>`<button class="hb ${hd.includes(h.id)?'on':''}" data-hab="${h.id}"><i>${hd.includes(h.id)?'✓':''}</i>${esc(h.name)}</button>`).join('')}</div></section>
+  <section><div class="sh"><h2>Mini tareas de hoy</h2><small>${mins?`≈ ${mins} min restantes`:''}</small></div>
+  ${p.length?p.sort((a,b)=>(a.last===T)-(b.last===T)).map(t=>taskRow(t,{later:true})).join(''):`<div class="card empty">La casa está al día. No hay nada vencido hoy.</div>`}
+  <button class="ghost" id="more">+ Tengo más ganas: sumar otra</button></section>
+  <div class="tip">${late?`Hay ${late} tarea${late>1?'s':''} más esperando. Van a ir entrando en los próximos días, de a poco, para que no se te junte.`:'Hacé solo esto y listo. Lo que no es de hoy, la app te lo trae cuando toque.'}</div>`}
+
+// Dibujo de la casa: se arma solo a partir de los ambientes cargados
+function cell(r,x,y,w,h,inter){const i=inter?zoneInfo(r.id):null,pool=r.type==='pileta';
+  const max=Math.floor((w-6)/6.6);let L=r.name;if(L.length>max){const s=TPL[r.type]?.s||'',num=(L.match(/\d+$/)||[''])[0],c=s+(num?' '+num:'');L=c.length<=max?c:L.slice(0,Math.max(1,max-1))+'…'}
+  return `<g ${inter?`class="room st-${i.st}" data-zone="${r.id}" role="button" tabindex="0" aria-label="${esc(r.name)}"`:'class="st-new"'}>
+  <rect x="${x+1}" y="${y+1}" width="${w-2}" height="${h-2}" rx="${pool?10:3}" fill="${pool?'var(--aqua)':'var(--c)'}" fill-opacity="${pool?.5:.2}" stroke="var(--c)" stroke-width="2"/>
+  ${pool?`<path d="M${x+8} ${y+12}q6-4 12 0t12 0 12 0" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/>`:''}
+  <text x="${x+w/2}" y="${y+h/2+(pool?8:4)}" text-anchor="middle">${esc(L)}</text>
+  ${i&&i.due?`<circle cx="${x+w-10}" cy="${y+10}" r="7" fill="var(--c)"/><text x="${x+w-10}" y="${y+14}" text-anchor="middle" style="fill:#fff;font-size:10px">${i.due}</text>`:''}</g>`}
+function houseSVG(H,inter){const R=H.rooms||[],IN=R.filter(r=>r.floor>=0),yard=R.filter(r=>r.floor<0&&YARD.has(r.type)),annex=R.filter(r=>r.floor<0&&!YARD.has(r.type));
+  const LW=yard.length?80:0,RW=annex.length?76:0,x0=LW?LW+6:12,hw=360-x0-(RW?RW+6:12),RH=58,yh=46,ah=44;
+  const fl=[];for(let f=H.floors-1;f>=0;f--){const rs=IN.filter(r=>r.floor===f),rows=[],per=Math.ceil(rs.length/Math.ceil(rs.length/4))||1;for(let i=0;i<Math.max(1,rs.length);i+=per)rows.push(rs.slice(i,i+per));fl.push({f,rows})}
+  const houseH=fl.reduce((a,x)=>a+x.rows.length*RH,0),ground=Math.max(houseH,yard.length*yh,annex.length*ah)+60,top=ground-houseH;let y=top,o='';
+  o+=`<path d="M${x0-8} ${top} L${x0+hw/2} ${top-44} L${x0+hw+8} ${top}z" fill="var(--soft)" stroke="var(--pri)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  for(const {f,rows} of fl){for(const row of rows){if(!row.length)o+=`<rect x="${x0+1}" y="${y+1}" width="${hw-2}" height="${RH-2}" rx="3" fill="none" stroke="var(--mut)" stroke-width="1.5" stroke-dasharray="5 5"/><text x="${x0+hw/2}" y="${y+RH/2+4}" text-anchor="middle" style="fill:var(--mut)">${FLN(f)} sin ambientes</text>`;
+    else{const tw=row.reduce((a,r)=>a+(TPL[r.type]?.w||1),0);let x=x0;for(const r of row){const w=hw*(TPL[r.type]?.w||1)/tw;o+=cell(r,x,y,w,RH,inter);x+=w}}y+=RH}}
+  annex.forEach((r,i)=>o+=cell(r,360-RW-6,ground-(i+1)*ah,RW,ah,inter));
+  yard.forEach((r,i)=>o+=cell(r,4,ground-(i+1)*yh,LW-2,yh-4,inter));
+  const minY=Math.min(top-50,ground-yard.length*yh-6,ground-annex.length*ah-6);
+  return `<svg viewBox="0 ${minY} 360 ${ground+6-minY}" role="img" aria-label="Plano de la casa">${o}<path d="M0 ${ground+1}h360" stroke="var(--ink)" stroke-width="2.5" opacity=".7"/></svg>`}
+
+function vCasa(){if(!S.rooms.length)return vArmar();return `<section><div class="sh"><h2>Cómo está la casa</h2><a class="edit" href="#armar">Editar ambientes</a></div>
+  <div class="card house">${houseSVG(S,true)}<div class="legend"><span class="st-ok">Al día</span><span class="st-due">Le toca</span><span class="st-late">Atrasado</span><span style="margin-left:auto">Tocá un ambiente</span></div></div></section>
+  <section><div class="card">${ordered().map(z=>{const i=zoneInfo(z.id);return `<button class="zrow st-${i.st}" data-zone="${z.id}"><span class="dot"></span><span class="b"><b>${esc(z.name)}</b> <small style="color:var(--mut)">· ${i.paused?'en pausa':i.due?i.due+' pendiente'+(i.due>1?'s':''):FLN(z.floor)}</small><span class="bar"><i style="width:${i.h}%;background:var(--c)"></i></span></span><span class="pct">${i.h}%</span></button>`}).join('')}</div></section>`}
+
+function vTareas(){return `<section><div class="sh"><h2>Todas las tareas</h2><button class="btn" id="newT">+ Nueva</button></div>
+  ${ordered().map(z=>{const ts=S.tasks.filter(t=>t.zone===z.id);return `<h3 style="margin:18px 0 8px">${esc(z.name)}</h3>${ts.map(t=>taskRow(t,{zone:false,when:true,edit:true})).join('')||`<button class="ghost" data-newin="${z.id}">+ Agregar tarea</button>`}`}).join('')}</section>`}
+
+function vAjustes(){const c=S.cfg;return `<section><h2 style="margin-bottom:10px">Ajustes</h2><div class="card set">
+  <div class="sw"><span><b>Mi casa</b><small>${S.rooms.length} ambiente${S.rooms.length===1?'':'s'} · ${S.floors} planta${S.floors>1?'s':''}</small></span><a class="btn2" href="#armar" style="display:grid;place-items:center;text-decoration:none">Editar</a></div>
+  <label for="bud">Minutos por día para mini tareas</label><select id="bud">${[10,15,20,25,30,45,60].map(m=>`<option ${m===c.budget?'selected':''} value="${m}">${m} minutos</option>`).join('')}</select>
+  <label for="hr">Hora del recordatorio</label><select id="hr">${Array.from({length:17},(_,i)=>i+7).map(h=>`<option ${h===c.hour?'selected':''} value="${h}">${h}:00 h</option>`).join('')}</select>
+  <div class="sw"><span><b>Recordatorios</b><small id="nst">Aviso diario si te quedan tareas</small></span><button class="tog" id="tNot" aria-pressed="${c.notif}" aria-label="Recordatorios"></button></div>
+  ${hasPool()?`<div class="sw"><span><b>Pileta en temporada</b><small>Apagado: pausa sacahojas, cloro y skimmer</small></span><button class="tog" id="tPool" aria-pressed="${c.pool}" aria-label="Pileta en temporada"></button></div>`:''}</div>
+  <h3 style="margin:18px 0 8px">Rutina diaria</h3><div class="card set">${S.habits.map(h=>`<div class="sw"><span>${esc(h.name)}</span><button class="edit" data-delh="${h.id}">Quitar</button></div>`).join('')}
+  <div class="row" style="margin-top:10px"><input id="nh" placeholder="Nuevo hábito diario" style="flex:1"><button class="btn2" id="addH">Agregar</button></div></div>
+  <h3 style="margin:18px 0 8px">Respaldo</h3><div class="card set"><p style="color:var(--mut);margin:12px 0 0">Copiá el respaldo y guardalo en una nota. Para restaurar, pegalo acá y tocá Restaurar.</p>
+  <textarea id="bk" aria-label="Respaldo"></textarea><div class="row" style="margin-top:8px"><button class="btn2" id="cpy">Copiar respaldo</button><button class="btn2" id="rst">Restaurar</button><button class="edit" id="wipe">Empezar de cero</button></div></div></section>`}
+
+// --- Armador de la casa ---
+let D=null;
+const newTasksCount=()=>D.rooms.filter(r=>!room(r.id)).reduce((a,r)=>a+(TPL[r.type]?.t.length||0),0);
+function roomName(type){const n=TPL[type].n,k=D.rooms.filter(r=>r.type===type).length;if(k===1){const f=D.rooms.find(r=>r.type===type);if(f.name===n)f.name=n+' 1'}return k?`${n} ${k+1}`:n}
+function sectionArmar(f){const rs=D.rooms.filter(r=>r.floor===f),types=Object.keys(TPL).filter(k=>f<0?TPL[k].at!=='in':TPL[k].at!=='out');
+  return `<div class="card set"><h3 style="margin:16px 0 10px">${FLN(f)}</h3>
+  ${rs.map(r=>`<div class="rrow"><span class="rt">${TPL[r.type].n}</span><input data-rname="${r.id}" value="${esc(r.name)}" aria-label="Nombre del ambiente"><button class="rx" data-delroom="${r.id}" aria-label="Quitar ${esc(r.name)}">×</button></div>`).join('')||`<p style="color:var(--mut);margin:0 0 10px">Tocá lo que hay en ${f<0?'el exterior':'esta planta'}:</p>`}
+  <div class="chips">${types.map(k=>`<button class="chip" data-addroom="${k}|${f}">+ ${TPL[k].n}</button>`).join('')}</div></div>`}
+function vArmar(){if(!D)D=clone({floors:S.floors||1,rooms:S.rooms});const first=!S.rooms.length,n=newTasksCount();
+  return `<section><h2>${first?'Contanos cómo es tu casa':'Editar mi casa'}</h2><p style="color:var(--mut);margin:6px 0 14px">Agregá los ambientes que tenés. La app arma sola las tareas de limpieza de cada uno y después las podés ajustar.</p>
+  <div class="card house" id="prev">${houseSVG(D,false)}</div>
+  ${first&&!D.rooms.length?`<button class="ghost" id="preset" style="margin-top:10px">Empezar con una casa típica y ajustarla</button>`:''}
+  <label>¿Cuántas plantas tiene?</label><div class="seg">${[1,2,3].map(k=>`<button data-floors="${k}" aria-pressed="${D.floors===k}">${k===1?'Una':k===2?'Dos':'Tres'}</button>`).join('')}</div>
+  ${Array.from({length:D.floors},(_,f)=>sectionArmar(f)).join('')}${sectionArmar(-1)}
+  <div class="savebar"><span>${D.rooms.length} ambientes${n?` · ${n} tareas nuevas`:''}</span>${first?'':'<button class="btn2" id="cancelHouse">Cancelar</button>'}<button class="btn" id="saveHouse" ${D.rooms.length?'':'disabled'}>${first?'Crear mi casa':'Guardar'}</button></div></section>`}
+function saveHouse(){const old=clone(S),ids=new Set(D.rooms.map(r=>r.id));let seed=S.tasks.length;
+  D.rooms.forEach(r=>{r.name=r.name.trim()||TPL[r.type].n;if(!room(r.id)){S.tasks.push(...tasksFor(r,seed));seed+=7}});
+  S.tasks=S.tasks.filter(t=>ids.has(t.zone));S.plan.ids=S.plan.ids.filter(id=>S.tasks.some(t=>t.id===id));
+  const first=!S.rooms.length;S.rooms=D.rooms;S.floors=D.floors;if(first)S.plan.date='';D=null;save();
+  location.hash=first?'hoy':'casa';render();toast(first?'¡Casa lista! Estas son tus primeras tareas':'Casa actualizada',()=>{S=old})}
+
+function render(){T=ds(new Date());if(S.rooms.length)buildPlan();let v=(location.hash.slice(1)||'hoy');if(!S.rooms.length&&v!=='ajustes')v='armar';if(v!=='armar')D=null;
+  const V={hoy:vHoy,casa:vCasa,tareas:vTareas,ajustes:vAjustes,armar:vArmar}[v]||vHoy;
+  $('#view').innerHTML=V();document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===(V===vHoy?'hoy':v==='armar'?'casa':v)));
+  const p=plan(),d=p.filter(t=>t.last===T).length,h=new Date().getHours();
+  $('#hello').textContent=h<12?'Buen día':h<20?'Buenas tardes':'Buenas noches';
+  const f=new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+  $('#sub').textContent=f.charAt(0).toUpperCase()+f.slice(1)+' · '+(!S.rooms.length?'primero armemos tu casa':p.length&&d===p.length?'todo hecho por hoy':`${p.length-d} mini tarea${p.length-d===1?'':'s'} para hoy`);
+  $('#ringv').setAttribute('stroke-dashoffset',213.6*(1-(p.length?d/p.length:1)));$('#ringt').textContent=`${d}/${p.length}`;
+  if(v==='ajustes'){$('#bk').value=JSON.stringify(S);if(S.cfg.notif&&!('Notification' in window&&Notification.permission==='granted'))$('#nst').textContent='Instalá la app para recibir avisos'}}
+
+function openSheet(html){$('#sheet').innerHTML='<button class="x" data-close aria-label="Cerrar">×</button>'+html;$('#ov').classList.add('show')}
+function closeSheet(){$('#ov').classList.remove('show');clearInterval(tim)}
+function openZone(z){const ts=S.tasks.filter(t=>t.zone===z).sort((a,b)=>ratio(b)-ratio(a));const i=zoneInfo(z);
+  openSheet(`<h2>${esc(zn(z))}</h2><p style="color:var(--mut);margin:4px 0 14px">${i.h}% al día${i.paused?' · en pausa fuera de temporada':''}</p><div class="zone-tasks">${ts.map(t=>taskRow(t,{zone:false,when:true})).join('')||'<div class="empty">Sin tareas</div>'}</div><button class="ghost" data-newin="${z}">+ Agregar tarea a ${esc(zn(z))}</button>`)}
+function editTask(id,zone){const t=S.tasks.find(x=>x.id===id)||{name:'',zone:zone||ordered()[0]?.id,freq:7,min:10};
+  openSheet(`<h2>${id?'Editar tarea':'Nueva tarea'}</h2><form id="tf"><label for="fn">Qué hay que hacer</label><input id="fn" required value="${esc(t.name)}" placeholder="Ej: limpiar la parrilla">
+  <label for="fz">Dónde</label><select id="fz">${ordered().map(z=>`<option value="${z.id}" ${z.id===t.zone?'selected':''}>${esc(z.name)}</option>`).join('')}</select>
+  <label for="ff">Cada cuánto</label><select id="ff">${FREQ.map(([d,n])=>`<option value="${d}" ${d===t.freq?'selected':''}>${n}</option>`).join('')}</select>
+  <label for="fm">Minutos aproximados</label><input id="fm" type="number" min="1" max="180" inputmode="numeric" value="${t.min}">
+  <div class="row" style="margin-top:16px"><button class="btn" type="submit">Guardar</button>${id?`<button class="edit" type="button" id="delT" style="margin-left:auto">Eliminar</button>`:''}</div></form>`);
+  $('#tf').onsubmit=e=>{e.preventDefault();const o={name:$('#fn').value.trim(),zone:$('#fz').value,freq:+$('#ff').value,min:Math.max(1,+$('#fm').value||5)};if(!o.name)return;
+    if(id)Object.assign(t,o);else S.tasks.push({id:uid(),...o,last:add(T,-Math.floor(o.freq/2)),snooze:null});save();closeSheet();render();toast(id?'Tarea actualizada':'Tarea agregada')};
+  if(id)$('#delT').onclick=()=>{const i=S.tasks.indexOf(t);S.tasks.splice(i,1);save();closeSheet();render();toast('Tarea eliminada',()=>S.tasks.splice(i,0,t))}}
+
+let tim;
+function focusMode(){const t=plan().find(t=>t.last!==T)||S.tasks.filter(t=>active(t)&&t.last!==T&&!snoozed(t)).sort((a,b)=>ratio(b)-ratio(a))[0];
+  if(!t){toast('No queda nada por hoy. ¡A descansar!');return}
+  let left=t.min*60,run=false;const fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  openSheet(`<div class="focus"><span class="zc">${esc(zn(t.zone))}</span><h2 style="margin-top:12px;font-size:28px">${esc(t.name)}</h2><p style="color:var(--mut)">Solo esto. Nada más. Son ${t.min} minutos.</p>
+  <div class="clock" id="clk">${fmt(left)}</div><div class="row" style="justify-content:center"><button class="btn2" id="play">Empezar</button><button class="btn" id="fdone">¡Hecho!</button></div></div>`);
+  $('#play').onclick=()=>{run=!run;$('#play').textContent=run?'Pausa':'Seguir';clearInterval(tim);if(run)tim=setInterval(()=>{left=Math.max(0,left-1);$('#clk').textContent=fmt(left);if(!left){clearInterval(tim);$('#clk').textContent='¡Tiempo!'}},1000)};
+  $('#fdone').onclick=()=>{if(!S.plan.ids.includes(t.id))S.plan.ids.push(t.id);closeSheet();complete(t.id)}}
+
+document.addEventListener('click',e=>{const g=k=>e.target.closest('['+k+']')?.getAttribute(k);let v;
+  if(e.target===$('#ov')||e.target.closest('[data-close]'))return closeSheet();
+  if(v=g('data-done')){complete(v);if($('#ov').classList.contains('show')){const z=S.tasks.find(t=>t.id===v)?.zone;if(z&&!$('#tf'))openZone(z)}return}
+  if(v=g('data-later'))return postpone(v);
+  if(v=g('data-addroom')){const[type,f]=v.split('|');D.rooms.push({id:uid(),type,name:roomName(type),floor:+f});return render()}
+  if(v=g('data-delroom')){D.rooms=D.rooms.filter(r=>r.id!==v);return render()}
+  if(v=g('data-floors')){D.floors=+v;D.rooms.forEach(r=>{if(r.floor>=D.floors)r.floor=D.floors-1});return render()}
+  if(v=g('data-hab'))return toggleHabit(v);
+  if(v=g('data-zone'))return openZone(v);
+  if(v=g('data-edit'))return editTask(v);
+  if(v=g('data-newin'))return editTask(null,v);
+  if(v=g('data-delh')){S.habits=S.habits.filter(h=>h.id!==v);save();return render()}
+  const id=e.target.closest('button')?.id;
+  if(id==='saveHouse')return saveHouse();
+  if(id==='cancelHouse'){D=null;location.hash='casa';return}
+  if(id==='preset'){D={floors:PRESET.floors,rooms:PRESET.rooms.map(([type,floor,name])=>({id:uid(),type,floor,name:name||TPL[type].n}))};return render()}
+  if(id==='more')addOne();else if(id==='newT')editTask(null);
+  else if(id==='addH'){const n=$('#nh').value.trim();if(n){S.habits.push({id:uid(),name:n});save();render()}}
+  else if(id==='tPool'){S.cfg.pool=!S.cfg.pool;S.plan.date='';save();render()}
+  else if(id==='tNot')toggleNotif();
+  else if(id==='cpy'){try{navigator.clipboard.writeText(JSON.stringify(S)).then(()=>toast('Respaldo copiado'),()=>{$('#bk').select();toast('Seleccionalo y copialo a mano')})}catch(err){$('#bk').select()}}
+  else if(id==='rst'){try{const o=migrate(JSON.parse($('#bk').value));if(!o)throw 0;const old=S;S=o;save();render();toast('Datos restaurados',()=>{S=old})}catch(err){toast('Ese texto no es un respaldo válido')}}
+  else if(id==='wipe'){const b=e.target.closest('button');if(b.dataset.sure){const old=S;S=fresh();save();render();toast('Empezaste de cero',()=>{S=old})}else{b.dataset.sure=1;b.textContent='¿Seguro? Tocá de nuevo'}}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();if((e.key==='Enter'||e.key===' ')&&e.target.matches('g[data-zone]')){e.preventDefault();openZone(e.target.dataset.zone)}});
+document.addEventListener('input',e=>{const id=e.target.dataset.rname;if(id&&D){const r=D.rooms.find(x=>x.id===id);if(r){r.name=e.target.value;$('#prev').innerHTML=houseSVG(D,false)}}});
+document.addEventListener('change',e=>{if(e.target.id==='bud'){S.cfg.budget=+e.target.value;S.plan.date='';save();render();toast('Plan de hoy recalculado')}if(e.target.id==='hr'){S.cfg.hour=+e.target.value;save()}});
+$('#goBtn').onclick=focusMode;
+window.addEventListener('hashchange',()=>{closeSheet();render();scrollTo(0,0)});
+
+// --- PWA y recordatorios ---
+let reg=null;
+if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js').then(r=>{reg=r}).catch(()=>{})}catch(e){}}
+function syncCfg(){try{if(!window.caches)return;const tm=add(T,1);const nextCount=S.tasks.filter(t=>active(t)&&(!t.snooze||t.snooze<=tm)&&diff(t.last,tm)/t.freq>=1).length;
+  caches.open('casa-cfg').then(c=>c.put('./__cfg',new Response(JSON.stringify({notif:S.cfg.notif,hour:S.cfg.hour,budget:S.cfg.budget,date:T,pending:pending(),nextCount:Math.min(nextCount,5),notified:S.notified})))).catch(()=>{})}catch(e){}}
+async function toggleNotif(){
+  if(S.cfg.notif){S.cfg.notif=false;save();return render()}
+  try{if(!('Notification' in window))throw 0;const p=await Notification.requestPermission();if(p!=='granted')throw 0;
+    S.cfg.notif=true;save();render();toast('Recordatorios activados');
+    try{const r=reg||await navigator.serviceWorker.ready;if(r.periodicSync)await r.periodicSync.register('recordatorio',{minInterval:6*36e5})}catch(e){}
+  }catch(e){S.cfg.notif=true;save();render();toast('Para recibir avisos, instalá la app en tu celular')}}
+async function checkReminder(){const now=new Date();if(ds(now)!==T)render();
+  if(!S.cfg.notif||now.getHours()<S.cfg.hour||S.notified===T||!pending())return;
+  try{if(Notification.permission!=='granted')return;S.notified=T;save();const body=`Te quedan ${pending()} mini tarea${pending()>1?'s':''} de hoy.`;
+    const r=reg||await navigator.serviceWorker?.getRegistration();r?r.showNotification('Casa en orden',{body,icon:'icon-192.png',tag:'casa'}):new Notification('Casa en orden',{body})}catch(e){}}
+setInterval(checkReminder,60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){render();checkReminder()}});
+render();checkReminder();
+}
+</script>
+</body>
+</html>
